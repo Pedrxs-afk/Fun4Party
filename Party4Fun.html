@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FUN4PARTY · Party Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Manrope:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14151f;
+    --bg-elevated: #1b1d2b;
+    --bg-elevated-2: #232538;
+    --paper: #f6efdc;
+    --paper-shade: #ece2c6;
+    --azul: #3462f2;
+    --azul-deep: #16255e;
+    --azul-glow: #6f8bff;
+    --rojo: #ef4136;
+    --rojo-deep: #5e1712;
+    --rojo-glow: #ff8079;
+    --gold: #f4b93e;
+    --ink: #14151f;
+    --text: #f3f1ea;
+    --text-soft: #9a9cb8;
+    --line: rgba(255,255,255,0.09);
+    --team: var(--azul);
+    --team-deep: var(--azul-deep);
+    --team-glow: var(--azul-glow);
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 50% 0%, #1e2036 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Manrope', sans-serif;
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .device{
+    width:100%;
+    max-width:460px;
+    min-height:100vh;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  h1,h2,h3{font-family:'Baloo 2', sans-serif; margin:0;}
+  button{font-family:'Manrope', sans-serif; cursor:pointer; border:none;}
+  input{font-family:'Manrope', sans-serif;}
+  :focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+
+  .screen{
+    display:none;
+    flex-direction:column;
+    flex:1;
+    padding:28px 22px 34px;
+    animation: fadeUp .38s ease;
+  }
+  .screen.active{display:flex;}
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .screen{animation:none;}
+    *{transition:none !important; animation-duration:.001s !important;}
+  }
+
+  /* ---------- Brand mark ---------- */
+  .brand{
+    display:flex; align-items:baseline; gap:8px; margin-bottom:4px;
+  }
+  .brand .word{
+    font-size:30px; font-weight:800; letter-spacing:0.5px;
+    background:linear-gradient(180deg, #fff, #cfd2ef);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .brand .tag{
+    font-family:'Space Mono', monospace; font-size:11px; color:var(--gold);
+    background:rgba(244,185,62,0.12); border:1px solid rgba(244,185,62,0.35);
+    padding:3px 8px; border-radius:20px; letter-spacing:1px;
+  }
+  .subtitle{color:var(--text-soft); font-size:14.5px; margin-top:6px; line-height:1.5;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:16px 20px; border-radius:16px;
+    font-weight:800; font-size:16px; font-family:'Baloo 2', sans-serif;
+    transition: transform .12s ease, filter .12s ease;
+    letter-spacing:0.3px;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(180deg, #ffcf6b, var(--gold));
+    color:#2b1c00;
+    box-shadow:0 10px 24px -8px rgba(244,185,62,0.55);
+  }
+  .btn-primary:disabled{
+    filter:grayscale(0.6) brightness(0.6); box-shadow:none; cursor:not-allowed;
+  }
+  .btn-ghost{
+    background:var(--bg-elevated-2); color:var(--text);
+    border:1px solid var(--line);
+  }
+  .btn-block{width:100%;}
+
+  /* ================= CONFIG SCREEN ================= */
+  .section-label{
+    font-family:'Space Mono', monospace; font-size:11.5px; color:var(--text-soft);
+    letter-spacing:1.5px; text-transform:uppercase; margin:26px 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-label::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  .player-input-row{display:flex; gap:8px;}
+  .player-input-row input{
+    flex:1; padding:14px 16px; border-radius:14px; border:1px solid var(--line);
+    background:var(--bg-elevated); color:var(--text); font-size:15px;
+  }
+  .player-input-row input::placeholder{color:var(--text-soft);}
+  .add-btn{
+    width:50px; border-radius:14px; background:var(--bg-elevated-2);
+    color:var(--gold); font-size:22px; font-weight:800; border:1px solid var(--line);
+  }
+
+  .player-list{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  .player-chip{
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-elevated); border:1px solid var(--line);
+    border-radius:14px; padding:10px 10px 10px 16px;
+  }
+  .player-chip .name{flex:1; font-weight:700; font-size:14.5px;}
+  .team-toggle{
+    display:flex; border-radius:10px; overflow:hidden; border:1px solid var(--line);
+    font-family:'Space Mono', monospace; font-size:11px; font-weight:700;
+  }
+  .team-toggle button{padding:8px 10px; background:var(--bg-elevated-2); color:var(--text-soft);}
+  .team-toggle button.on-azul{background:var(--azul); color:#fff;}
+  .team-toggle button.on-rojo{background:var(--rojo); color:#fff;}
+  .chip-remove{background:transparent; color:var(--text-soft); font-size:16px; padding:6px;}
+
+  .team-counts{display:flex; gap:10px; margin-top:12px;}
+  .team-count-pill{
+    flex:1; text-align:center; padding:8px; border-radius:12px; font-family:'Space Mono',monospace;
+    font-size:12px; font-weight:700; border:1px solid var(--line);
+  }
+  .team-count-pill.azul{color:var(--azul-glow); border-color:rgba(52,98,242,0.4);}
+  .team-count-pill.rojo{color:var(--rojo-glow); border-color:rgba(239,65,54,0.4);}
+
+  .deck-grid{display:flex; flex-direction:column; gap:10px;}
+  .deck-card{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px; border-radius:16px; border:2px solid var(--line);
+    background:var(--bg-elevated); text-align:left;
+  }
+  .deck-card .emoji{font-size:24px;}
+  .deck-card .info{flex:1;}
+  .deck-card .info .name{font-weight:800; font-size:15px; font-family:'Baloo 2';}
+  .deck-card .info .desc{font-size:12px; color:var(--text-soft); margin-top:2px;}
+  .deck-card.selected{border-color:var(--gold); background:rgba(244,185,62,0.08);}
+  .deck-card .chev{font-size:14px; color:var(--text-soft); transition:transform .2s ease;}
+  .deck-card.expanded .chev{transform:rotate(180deg);}
+
+  .subdeck-wrap{
+    max-height:0; overflow:hidden; transition:max-height .25s ease;
+  }
+  .subdeck-wrap.open{max-height:400px;}
+  .subdeck-grid{
+    display:flex; flex-direction:column; gap:8px;
+    padding:4px 4px 4px 14px; margin-top:8px;
+    border-left:2px solid rgba(244,185,62,0.3);
+  }
+  .subdeck-card{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 14px; border-radius:14px; border:2px solid var(--line);
+    background:var(--bg-elevated-2); text-align:left;
+  }
+  .subdeck-card .emoji{font-size:19px;}
+  .subdeck-card .info{flex:1;}
+  .subdeck-card .info .name{font-weight:800; font-size:13.5px; font-family:'Baloo 2';}
+  .subdeck-card .info .desc{font-size:11px; color:var(--text-soft); margin-top:1px;}
+  .subdeck-card.selected{border-color:var(--gold); background:rgba(244,185,62,0.1);}
+
+  .timer-choices{display:flex; gap:8px;}
+  .timer-choices button{
+    flex:1; padding:12px; border-radius:12px; border:2px solid var(--line);
+    background:var(--bg-elevated); color:var(--text-soft); font-weight:800;
+    font-family:'Space Mono', monospace;
+  }
+  .timer-choices button.selected{border-color:var(--gold); color:var(--gold); background:rgba(244,185,62,0.08);}
+
+  .hint{font-size:12.5px; color:var(--text-soft); margin-top:10px; text-align:center; min-height:16px;}
+
+  /* ================= HANDOFF / ROUND INTRO ================= */
+  .center-screen{align-items:center; justify-content:center; text-align:center; gap:18px;}
+  .pass-icon{font-size:54px;}
+  .team-banner{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:8px 18px; border-radius:40px; font-family:'Space Mono', monospace;
+    font-weight:700; font-size:13px; letter-spacing:1px;
+  }
+  .team-banner.azul{background:rgba(52,98,242,0.16); color:var(--azul-glow); border:1px solid rgba(52,98,242,0.4);}
+  .team-banner.rojo{background:rgba(239,65,54,0.16); color:var(--rojo-glow); border:1px solid rgba(239,65,54,0.4);}
+  .handoff-name{font-size:38px; font-weight:800; margin:4px 0 2px;}
+  .round-pill{
+    font-family:'Space Mono', monospace; font-size:12px; color:var(--gold);
+    letter-spacing:2px; text-transform:uppercase;
+  }
+  .rule-card{
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:18px;
+    padding:20px; margin-top:6px;
+  }
+  .rule-card .rule-title{font-size:19px; font-weight:800; margin-bottom:6px;}
+  .rule-card .rule-desc{font-size:14px; color:var(--text-soft); line-height:1.55;}
+  .score-strip{
+    display:flex; gap:10px; width:100%; margin-top:10px;
+  }
+  .score-mini{
+    flex:1; border-radius:14px; padding:10px; text-align:center;
+    font-family:'Space Mono', monospace; border:1px solid var(--line);
+  }
+  .score-mini .n{font-size:22px; font-weight:700;}
+  .score-mini.azul{background:rgba(52,98,242,0.1); color:var(--azul-glow);}
+  .score-mini.rojo{background:rgba(239,65,54,0.1); color:var(--rojo-glow);}
+
+  /* ================= PLAY SCREEN ================= */
+  .play-top{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;
+  }
+  .play-team-tag{
+    font-family:'Space Mono', monospace; font-size:12px; font-weight:700;
+    padding:6px 12px; border-radius:20px; letter-spacing:0.5px;
+  }
+  .play-round-tag{
+    font-family:'Space Mono', monospace; font-size:11px; color:var(--text-soft);
+    letter-spacing:1px;
+  }
+
+  .timer-wrap{
+    display:flex; justify-content:center; margin:14px 0 8px; position:relative;
+  }
+  .timer-ring{ width:120px; height:120px; transform:rotate(-90deg); }
+  .timer-ring circle{ fill:none; stroke-width:9; }
+  .timer-track{ stroke:var(--bg-elevated-2); }
+  .timer-progress{
+    stroke:var(--team); stroke-linecap:round;
+    transition: stroke-dashoffset 0.2s linear, stroke .3s ease;
+  }
+  .timer-num{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono', monospace; font-size:34px; font-weight:700;
+  }
+  .timer-num.low{color:var(--rojo-glow); animation:pulse 0.6s infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+
+  .score-row{display:flex; justify-content:center; gap:22px; margin-bottom:10px;
+    font-family:'Space Mono', monospace; font-size:13px; color:var(--text-soft);
+  }
+  .score-row b{font-size:16px;}
+  .score-row .s-azul b{color:var(--azul-glow);}
+  .score-row .s-rojo b{color:var(--rojo-glow);}
+
+  .card-stage{ flex:1; display:flex; align-items:center; justify-content:center; padding:6px 0 18px;}
+  .word-card{
+    position:relative;
+    width:100%;
+    min-height:220px;
+    background:var(--paper);
+    border-radius:26px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:30px 26px;
+    box-shadow:0 20px 40px -18px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.04);
+  }
+  .word-card::before, .word-card::after{
+    content:''; position:absolute; top:50%; transform:translateY(-50%);
+    width:26px; height:26px; border-radius:50%; background:var(--bg);
+  }
+  .word-card::before{ left:-13px; }
+  .word-card::after{ right:-13px; }
+  .word-card .eyebrow{
+    position:absolute; top:16px; left:0; right:0; text-align:center;
+    font-family:'Space Mono', monospace; font-size:10.5px; letter-spacing:2px;
+    color:#9a8f6a; text-transform:uppercase;
+  }
+  .word-card .word{
+    font-family:'Baloo 2', sans-serif; font-weight:800; color:var(--ink);
+    font-size:clamp(28px, 8vw, 40px); line-height:1.15; word-break:break-word;
+  }
+  .word-card .stub-line{
+    position:absolute; top:44px; left:16px; right:16px; height:0;
+    border-top:2px dashed rgba(20,21,31,0.15);
+  }
+
+  .action-row{display:flex; gap:14px;}
+  .action-btn{
+    flex:1; height:78px; border-radius:22px; font-size:16px; font-weight:800;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-family:'Baloo 2', sans-serif;
+  }
+  .action-btn .ic{font-size:26px;}
+  .btn-pass{background:var(--bg-elevated); color:var(--text-soft); border:2px solid var(--line);}
+  .btn-correct{background:linear-gradient(180deg,#3ee08a,#1fae63); color:#06210f;
+    box-shadow:0 12px 26px -10px rgba(31,174,99,0.55);}
+
+  /* ================= ROUND END ================= */
+  .round-end-icon{font-size:50px;}
+
+  /* ================= VICTORY ================= */
+  .trophy{font-size:64px;}
+  .winner-name{
+    font-family:'Baloo 2'; font-size:34px; font-weight:800; margin:4px 0;
+  }
+  .final-scores{display:flex; gap:14px; width:100%; margin-top:16px;}
+  .final-score-card{
+    flex:1; border-radius:20px; padding:22px 10px; text-align:center;
+    border:2px solid var(--line);
+  }
+  .final-score-card .team-name{font-family:'Space Mono', monospace; font-size:12px; letter-spacing:1.5px;}
+  .final-score-card .team-score{font-size:38px; font-weight:800; font-family:'Baloo 2'; margin-top:6px;}
+  .final-score-card.azul{background:rgba(52,98,242,0.1); color:var(--azul-glow); border-color:rgba(52,98,242,0.4);}
+  .final-score-card.rojo{background:rgba(239,65,54,0.1); color:var(--rojo-glow); border-color:rgba(239,65,54,0.4);}
+  .final-score-card.win{box-shadow:0 0 0 3px var(--gold) inset;}
+
+  .top-spacer{flex:1;}
+</style>
+</head>
+<body>
+<div class="device">
+
+  <!-- ============ SCREEN: CONFIG ============ -->
+  <section class="screen active" id="screen-config">
+    <div class="brand">
+      <h1 class="word">FUN4PARTY</h1>
+      <span class="tag">PARTY GAME</span>
+    </div>
+    <p class="subtitle">Reunid al grupo, repartíos en dos equipos y pasaos el móvil. Tres rondas, un mazo, cero excusas.</p>
+
+    <div class="section-label">Jugadores</div>
+    <div class="player-input-row">
+      <input type="text" id="playerNameInput" placeholder="Nombre del jugador" maxlength="16">
+      <button class="add-btn" id="addPlayerBtn">+</button>
+    </div>
+    <div class="player-list" id="playerList"></div>
+    <div class="team-counts">
+      <div class="team-count-pill azul" id="countAzul">AZUL · 0</div>
+      <div class="team-count-pill rojo" id="countRojo">ROJO · 0</div>
+    </div>
+    <button class="btn btn-ghost btn-block" id="shuffleTeamsBtn" style="margin-top:10px;">🎲 Repartir equipos al azar</button>
+
+    <div class="section-label">Mazo de palabras</div>
+    <div class="deck-grid" id="deckGrid"></div>
+
+    <div class="section-label">Duración del turno</div>
+    <div class="timer-choices" id="timerChoices">
+      <button data-t="30">30s</button>
+      <button data-t="45">45s</button>
+      <button data-t="60">60s</button>
+    </div>
+
+    <div style="flex:1;"></div>
+    <div class="hint" id="configHint">Añade al menos 4 jugadores (2 por equipo) para empezar.</div>
+    <button class="btn btn-primary btn-block" id="startGameBtn" disabled>Empezar partida</button>
+  </section>
+
+  <!-- ============ SCREEN: ROUND INTRO ============ -->
+  <section class="screen center-screen" id="screen-roundintro">
+    <div class="round-pill" id="roundIntroLabel">RONDA 1 DE 3</div>
+    <div class="rule-card">
+      <div class="rule-title" id="roundIntroTitle">Descríbelo con palabras</div>
+      <div class="rule-desc" id="roundIntroDesc">Explica la palabra de la tarjeta como quieras, pero sin decirla ni decir nada que la contenga.</div>
+    </div>
+    <button class="btn btn-primary btn-block" id="roundIntroContinue" style="margin-top:22px;">Entendido, ¡vamos!</button>
+  </section>
+
+  <!-- ============ SCREEN: HANDOFF ============ -->
+  <section class="screen center-screen" id="screen-handoff">
+    <div class="pass-icon">📱</div>
+    <div class="team-banner" id="handoffTeamBanner">EQUIPO</div>
+    <div class="handoff-name" id="handoffPlayerName">Nombre</div>
+    <div class="subtitle" style="margin-top:-6px;" id="handoffSub">Pasa el móvil a este jugador. Cuando esté listo, que pulse el botón.</div>
+    <div class="score-strip">
+      <div class="score-mini azul"><div class="n" id="handoffScoreAzul">0</div>AZUL</div>
+      <div class="score-mini rojo"><div class="n" id="handoffScoreRojo">0</div>ROJO</div>
+    </div>
+    <button class="btn btn-primary btn-block" id="handoffReadyBtn" style="margin-top:22px;">Estoy listo/a</button>
+  </section>
+
+  <!-- ============ SCREEN: PLAY ============ -->
+  <section class="screen" id="screen-play">
+    <div class="play-top">
+      <div class="play-team-tag" id="playTeamTag">EQUIPO AZUL</div>
+      <div class="play-round-tag" id="playRoundTag">RONDA 1 · LIBRE</div>
+    </div>
+
+    <div class="timer-wrap">
+      <svg class="timer-ring" viewBox="0 0 120 120">
+        <circle class="timer-track" cx="60" cy="60" r="52"></circle>
+        <circle class="timer-progress" id="timerProgress" cx="60" cy="60" r="52"></circle>
+      </svg>
+      <div class="timer-num" id="timerNum">45</div>
+    </div>
+
+    <div class="score-row">
+      <span class="s-azul"><b id="playScoreAzul">0</b> Azul</span>
+      <span class="s-rojo"><b id="playScoreRojo">0</b> Rojo</span>
+    </div>
+
+    <div class="card-stage">
+      <div class="word-card">
+        <div class="eyebrow" id="cardEyebrow">Palabra</div>
+        <div class="stub-line"></div>
+        <div class="word" id="cardWord">CARGANDO</div>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn btn-pass" id="passBtn"><span class="ic">✕</span>Paso</button>
+      <button class="action-btn btn-correct" id="correctBtn"><span class="ic">✓</span>¡Acierto!</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: ROUND END ============ -->
+  <section class="screen center-screen" id="screen-roundend">
+    <div class="round-end-icon">🎉</div>
+    <div class="round-pill" id="roundEndLabel">FIN DE LA RONDA 1</div>
+    <h2 style="font-size:24px;">¡Mazo completado!</h2>
+    <div class="score-strip">
+      <div class="score-mini azul"><div class="n" id="roundEndScoreAzul">0</div>AZUL</div>
+      <div class="score-mini rojo"><div class="n" id="roundEndScoreRojo">0</div>ROJO</div>
+    </div>
+    <button class="btn btn-primary btn-block" id="roundEndContinue" style="margin-top:22px;">Siguiente ronda</button>
+  </section>
+
+  <!-- ============ SCREEN: VICTORY ============ -->
+  <section class="screen center-screen" id="screen-victory">
+    <div class="trophy">🏆</div>
+    <div class="round-pill">FIN DE LA PARTIDA</div>
+    <div class="winner-name" id="victoryTeamName">EQUIPO AZUL GANA</div>
+    <div class="final-scores">
+      <div class="final-score-card azul" id="finalCardAzul">
+        <div class="team-name">AZUL</div>
+        <div class="team-score" id="finalScoreAzul">0</div>
+      </div>
+      <div class="final-score-card rojo" id="finalCardRojo">
+        <div class="team-name">ROJO</div>
+        <div class="team-score" id="finalScoreRojo">0</div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="playAgainBtn" style="margin-top:26px;">Jugar otra partida</button>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Word decks ---------------- */
+  const DECKS = {
+    facil: {
+      name: "Fácil",
+      emoji: "🟢",
+      desc: "Objetos y animales de andar por casa",
+      words: ["Elefante","Paraguas","Bicicleta","Cocodrilo","Semáforo","Guitarra","Ballena","Escalera","Mariposa","Sombrero","Tijeras","Calcetín","Bombilla","Tortuga","Camión","Jirafa","Almohada","Payaso","Volcán","Cometa","Zanahoria","Pingüino","Espejo","Castillo","Dinosaurio","Bufanda","Piscina","Cangrejo","Tambor","Molino"]
+    },
+    dificil: {
+      name: "Difícil",
+      emoji: "🔴",
+      desc: "Conceptos y palabras abstractas",
+      words: ["Nostalgia","Burocracia","Coincidencia","Improvisar","Simetría","Efímero","Paradoja","Procrastinar","Empatía","Algoritmo","Ambigüedad","Solidaridad","Inercia","Reciclaje","Diplomacia","Metáfora","Utopía","Escasez","Frontera","Ironía","Impulsivo","Contagio","Herencia","Equilibrio","Rutina","Intuición","Perspectiva","Testarudo","Añoranza","Vértigo"]
+    },
+    cine_marvel: {
+      name: "Marvel",
+      emoji: "🦸",
+      desc: "Héroes y villanos del universo Marvel",
+      parent: "cine",
+      words: ["Iron Man","Spider-Man","Thor","Hulk","Capitán América","Viuda Negra","Ojo de Halcón","Doctor Extraño","Pantera Negra","Star-Lord","Groot","Rocket Raccoon","Gamora","Loki","Thanos","Nick Fury","Ant-Man","Visión","Bruja Escarlata","Deadpool","Lobezno","Magneto","Profesor X","Mística","Venom","Daredevil","Punisher","Capitana Marvel","Ultrón","Hombre de Hielo"]
+    },
+    cine_dc: {
+      name: "DC",
+      emoji: "🦇",
+      desc: "Héroes y villanos del universo DC",
+      parent: "cine",
+      words: ["Superman","Batman","Mujer Maravilla","Flash","Aquaman","Linterna Verde","Cyborg","Joker","Harley Quinn","Lex Luthor","Batgirl","Robin","Catwoman","Bane","Pingüino","Enigma","Shazam","Flecha Verde","Escuadrón Suicida","Darkseid"]
+    },
+    cine_dibujos: {
+      name: "Dibujos animados",
+      emoji: "📺",
+      desc: "Clásicos y series animadas",
+      parent: "cine",
+      words: ["Coraje el perro cobarde","Pokémon","Bob Esponja","Los Padrinos Mágicos","El Laboratorio de Dexter","Las Chicas Superpoderosas","Ben 10","Tom y Jerry","Doraemon","Los Simpson","Hora de Aventura","Gravity Falls","Steven Universe","Phineas y Ferb","Scooby-Doo","El Chavo del Ocho","Looney Tunes","Piolín","Bugs Bunny","Popeye","Shin Chan","Pikachu"]
+    }
+  };
+
+  const CINE_SUBDECKS = ["cine_marvel","cine_dc","cine_dibujos"];
+
+  const ROUND_META = [
+    { key:"libre", label:"LIBRE", title:"Descríbelo con palabras", desc:"Explica la palabra de la tarjeta como quieras, pero sin decirla ni decir nada que la contenga." },
+    { key:"mimica", label:"MÍMICA", title:"Solo mímica y gestos", desc:"Nada de hablar. Solo puedes usar gestos y mímica para que tu equipo adivine la palabra." },
+    { key:"unapalabra", label:"1 PALABRA", title:"Una única palabra de pista", desc:"Puedes decir exactamente una sola palabra como pista. Ni más, ni repetirla de otra forma." }
+  ];
+
+  /* ---------------- State ---------------- */
+  let state = {
+    players: [], // {name, team: 'azul'|'rojo'}
+    deckKey: "facil",
+    turnDuration: 45,
+    round: 0, // 0,1,2
+    roundDeck: [],
+    deckIndex: 0,
+    score: { azul: 0, rojo: 0 },
+    currentTeam: "azul",
+    teamOrder: { azul: 0, rojo: 0 }, // rotating index per team
+    timeLeft: 45,
+    timerId: null
+  };
+
+  const PASS_PENALTY = 5;
+
+  /* ---------------- DOM helpers ---------------- */
+  const $ = (id) => document.getElementById(id);
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    $(id).classList.add("active");
+  }
+
+  /* ================= CONFIG SCREEN ================= */
+  const playerList = $("playerList");
+  const nameInput = $("playerNameInput");
+
+  function renderPlayers(){
+    playerList.innerHTML = "";
+    state.players.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.className = "player-chip";
+      row.innerHTML = `
+        <span class="name">${p.name}</span>
+        <div class="team-toggle">
+          <button data-i="${i}" data-team="azul" class="${p.team==='azul'?'on-azul':''}">AZUL</button>
+          <button data-i="${i}" data-team="rojo" class="${p.team==='rojo'?'on-rojo':''}">ROJO</button>
+        </div>
+        <button class="chip-remove" data-remove="${i}">✕</button>
+      `;
+      playerList.appendChild(row);
+    });
+    playerList.querySelectorAll(".team-toggle button").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const i = +btn.dataset.i;
+        state.players[i].team = btn.dataset.team;
+        renderPlayers();
+        updateConfigState();
+      });
+    });
+    playerList.querySelectorAll("[data-remove]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        state.players.splice(+btn.dataset.remove, 1);
+        renderPlayers();
+        updateConfigState();
+      });
+    });
+  }
+
+  function addPlayer(){
+    const name = nameInput.value.trim();
+    if(!name) return;
+    // auto-balance new player to whichever team currently has fewer
+    const azulCount = state.players.filter(p=>p.team==='azul').length;
+    const rojoCount = state.players.filter(p=>p.team==='rojo').length;
+    const team = azulCount <= rojoCount ? "azul" : "rojo";
+    state.players.push({ name, team });
+    nameInput.value = "";
+    renderPlayers();
+    updateConfigState();
+    nameInput.focus();
+  }
+
+  $("addPlayerBtn").addEventListener("click", addPlayer);
+  nameInput.addEventListener("keydown", (e)=>{ if(e.key === "Enter"){ e.preventDefault(); addPlayer(); }});
+
+  $("shuffleTeamsBtn").addEventListener("click", ()=>{
+    const shuffled = [...state.players].sort(()=>Math.random()-0.5);
+    shuffled.forEach((p, i)=>{ p.team = i % 2 === 0 ? "azul" : "rojo"; });
+    state.players = shuffled;
+    renderPlayers();
+    updateConfigState();
+  });
+
+  function updateConfigState(){
+    const azul = state.players.filter(p=>p.team==='azul').length;
+    const rojo = state.players.filter(p=>p.team==='rojo').length;
+    $("countAzul").textContent = `AZUL · ${azul}`;
+    $("countRojo").textContent = `ROJO · ${rojo}`;
+    const ok = azul >= 2 && rojo >= 2;
+    $("startGameBtn").disabled = !ok;
+    $("configHint").textContent = ok
+      ? "Todo listo. ¡A repartir palabras!"
+      : "Añade al menos 4 jugadores (2 por equipo) para empezar.";
+  }
+
+  // Deck grid
+  const deckGrid = $("deckGrid");
+  let cineExpanded = CINE_SUBDECKS.includes(state.deckKey);
+
+  function renderDecks(){
+    deckGrid.innerHTML = "";
+
+    // Fácil / Difícil (simple cards)
+    ["facil","dificil"].forEach(key=>{
+      const d = DECKS[key];
+      const card = document.createElement("button");
+      card.className = "deck-card" + (state.deckKey === key ? " selected" : "");
+      card.innerHTML = `<span class="emoji">${d.emoji}</span>
+        <span class="info"><span class="name">${d.name}</span><span class="desc">${d.desc}</span></span>`;
+      card.addEventListener("click", ()=>{ state.deckKey = key; cineExpanded = false; renderDecks(); });
+      deckGrid.appendChild(card);
+    });
+
+    // Cine y series (expandable parent with submenu)
+    const cineSelected = CINE_SUBDECKS.includes(state.deckKey);
+    const parentCard = document.createElement("button");
+    parentCard.className = "deck-card" + (cineSelected ? " selected" : "") + (cineExpanded ? " expanded" : "");
+    parentCard.innerHTML = `<span class="emoji">🎬</span>
+      <span class="info"><span class="name">Cine y series</span><span class="desc">Elige franquicia: Marvel, DC, dibujos animados...</span></span>
+      <span class="chev">▾</span>`;
+    parentCard.addEventListener("click", ()=>{ cineExpanded = !cineExpanded; renderDecks(); });
+    deckGrid.appendChild(parentCard);
+
+    const subWrap = document.createElement("div");
+    subWrap.className = "subdeck-wrap" + (cineExpanded ? " open" : "");
+    const subGrid = document.createElement("div");
+    subGrid.className = "subdeck-grid";
+    CINE_SUBDECKS.forEach(key=>{
+      const d = DECKS[key];
+      const sub = document.createElement("button");
+      sub.className = "subdeck-card" + (state.deckKey === key ? " selected" : "");
+      sub.innerHTML = `<span class="emoji">${d.emoji}</span>
+        <span class="info"><span class="name">${d.name}</span><span class="desc">${d.desc}</span></span>`;
+      sub.addEventListener("click", (e)=>{ e.stopPropagation(); state.deckKey = key; renderDecks(); });
+      subGrid.appendChild(sub);
+    });
+    subWrap.appendChild(subGrid);
+    deckGrid.appendChild(subWrap);
+  }
+  renderDecks();
+
+  // Timer choice
+  const timerChoices = $("timerChoices");
+  function renderTimerChoices(){
+    timerChoices.querySelectorAll("button").forEach(btn=>{
+      btn.classList.toggle("selected", +btn.dataset.t === state.turnDuration);
+      btn.onclick = ()=>{ state.turnDuration = +btn.dataset.t; renderTimerChoices(); };
+    });
+  }
+  renderTimerChoices();
+
+  renderPlayers();
+  updateConfigState();
+
+  /* ================= GAME FLOW ================= */
+  $("startGameBtn").addEventListener("click", ()=>{
+    state.score = { azul:0, rojo:0 };
+    state.round = 0;
+    state.teamOrder = { azul:0, rojo:0 };
+    state.currentTeam = Math.random() < 0.5 ? "azul" : "rojo";
+    startRound();
+  });
+
+  function shuffledWords(){
+    return [...DECKS[state.deckKey].words].sort(()=>Math.random()-0.5);
+  }
+
+  function startRound(){
+    state.roundDeck = shuffledWords();
+    state.deckIndex = 0;
+    showRoundIntro();
+  }
+
+  function showRoundIntro(){
+    const meta = ROUND_META[state.round];
+    $("roundIntroLabel").textContent = `RONDA ${state.round+1} DE 3`;
+    $("roundIntroTitle").textContent = meta.title;
+    $("roundIntroDesc").textContent = meta.desc;
+    showScreen("screen-roundintro");
+  }
+
+  $("roundIntroContinue").addEventListener("click", ()=>{
+    goToHandoff();
+  });
+
+  function teamPlayers(team){
+    return state.players.filter(p=>p.team===team);
+  }
+
+  function currentPlayerName(){
+    const list = teamPlayers(state.currentTeam);
+    const idx = state.teamOrder[state.currentTeam] % list.length;
+    return list[idx].name;
+  }
+
+  function goToHandoff(){
+    setTeamCSSVar(state.currentTeam);
+    const name = currentPlayerName();
+    const banner = $("handoffTeamBanner");
+    banner.textContent = state.currentTeam === "azul" ? "EQUIPO AZUL" : "EQUIPO ROJO";
+    banner.className = "team-banner " + state.currentTeam;
+    $("handoffPlayerName").textContent = name;
+    $("handoffSub").textContent = `Ronda ${state.round+1}: ${ROUND_META[state.round].title.toLowerCase()}. Pasa el móvil y pulsa listo cuando toque jugar.`;
+    $("handoffScoreAzul").textContent = state.score.azul;
+    $("handoffScoreRojo").textContent = state.score.rojo;
+    showScreen("screen-handoff");
+  }
+
+  $("handoffReadyBtn").addEventListener("click", ()=>{
+    beginTurn();
+  });
+
+  function setTeamCSSVar(team){
+    const root = document.documentElement;
+    if(team === "azul"){
+      root.style.setProperty("--team", "var(--azul)");
+      root.style.setProperty("--team-deep", "var(--azul-deep)");
+      root.style.setProperty("--team-glow", "var(--azul-glow)");
+    } else {
+      root.style.setProperty("--team", "var(--rojo)");
+      root.style.setProperty("--team-deep", "var(--rojo-deep)");
+      root.style.setProperty("--team-glow", "var(--rojo-glow)");
+    }
+  }
+
+  const RADIUS = 52;
+  const CIRC = 2 * Math.PI * RADIUS;
+  const timerProgress = $("timerProgress");
+  timerProgress.style.strokeDasharray = `${CIRC}`;
+
+  function beginTurn(){
+    setTeamCSSVar(state.currentTeam);
+    $("playTeamTag").textContent = state.currentTeam === "azul" ? "EQUIPO AZUL" : "EQUIPO ROJO";
+    $("playTeamTag").style.background = state.currentTeam === "azul" ? "rgba(52,98,242,0.18)" : "rgba(239,65,54,0.18)";
+    $("playTeamTag").style.color = state.currentTeam === "azul" ? "var(--azul-glow)" : "var(--rojo-glow)";
+    $("playRoundTag").textContent = `RONDA ${state.round+1} · ${ROUND_META[state.round].label}`;
+    $("cardEyebrow").textContent = ROUND_META[state.round].title;
+    state.timeLeft = state.turnDuration;
+    updateScoreRow();
+    loadCard();
+    updateTimerUI();
+    showScreen("screen-play");
+    clearInterval(state.timerId);
+    state.timerId = setInterval(tick, 1000);
+  }
+
+  function updateScoreRow(){
+    $("playScoreAzul").textContent = state.score.azul;
+    $("playScoreRojo").textContent = state.score.rojo;
+  }
+
+  function loadCard(){
+    if(state.deckIndex >= state.roundDeck.length){
+      endRound();
+      return;
+    }
+    $("cardWord").textContent = state.roundDeck[state.deckIndex].toUpperCase();
+  }
+
+  function updateTimerUI(){
+    const pct = Math.max(0, state.timeLeft / state.turnDuration);
+    timerProgress.style.strokeDashoffset = `${CIRC * (1 - pct)}`;
+    const numEl = $("timerNum");
+    numEl.textContent = Math.max(0, state.timeLeft);
+    numEl.classList.toggle("low", state.timeLeft <= 10);
+    if(state.timeLeft <= 10){
+      timerProgress.style.stroke = "var(--rojo)";
+    } else {
+      timerProgress.style.stroke = "var(--team)";
+    }
+  }
+
+  function tick(){
+    state.timeLeft--;
+    if(state.timeLeft <= 0){
+      state.timeLeft = 0;
+      updateTimerUI();
+      endTurn();
+      return;
+    }
+    updateTimerUI();
+  }
+
+  $("correctBtn").addEventListener("click", ()=>{
+    state.score[state.currentTeam]++;
+    state.deckIndex++;
+    updateScoreRow();
+    loadCard();
+  });
+
+  $("passBtn").addEventListener("click", ()=>{
+    // passed word goes to the back of the round deck so it can resurface
+    const word = state.roundDeck[state.deckIndex];
+    state.roundDeck.splice(state.deckIndex, 1);
+    state.roundDeck.push(word);
+    state.timeLeft = Math.max(0, state.timeLeft - PASS_PENALTY);
+    updateTimerUI();
+    if(state.timeLeft <= 0){
+      endTurn();
+      return;
+    }
+    loadCard();
+  });
+
+  function endTurn(){
+    clearInterval(state.timerId);
+    if(state.deckIndex >= state.roundDeck.length){
+      endRound();
+      return;
+    }
+    // advance to next player of the other team
+    const finishingTeam = state.currentTeam;
+    state.teamOrder[finishingTeam]++;
+    state.currentTeam = finishingTeam === "azul" ? "rojo" : "azul";
+    goToHandoff();
+  }
+
+  function endRound(){
+    clearInterval(state.timerId);
+    $("roundEndLabel").textContent = `FIN DE LA RONDA ${state.round+1}`;
+    $("roundEndScoreAzul").textContent = state.score.azul;
+    $("roundEndScoreRojo").textContent = state.score.rojo;
+    showScreen("screen-roundend");
+  }
+
+  $("roundEndContinue").addEventListener("click", ()=>{
+    state.round++;
+    if(state.round >= ROUND_META.length){
+      showVictory();
+    } else {
+      // next round: alternate who starts, keep rotating order
+      state.currentTeam = state.currentTeam === "azul" ? "rojo" : "azul";
+      startRound();
+    }
+  });
+
+  function showVictory(){
+    const azul = state.score.azul, rojo = state.score.rojo;
+    $("finalScoreAzul").textContent = azul;
+    $("finalScoreRojo").textContent = rojo;
+    $("finalCardAzul").classList.toggle("win", azul > rojo);
+    $("finalCardRojo").classList.toggle("win", rojo > azul);
+    let title;
+    if(azul === rojo) title = "¡EMPATE!";
+    else title = azul > rojo ? "EQUIPO AZUL GANA" : "EQUIPO ROJO GANA";
+    $("victoryTeamName").textContent = title;
+    showScreen("screen-victory");
+  }
+
+  $("playAgainBtn").addEventListener("click", ()=>{
+    clearInterval(state.timerId);
+    state.round = 0;
+    state.score = { azul:0, rojo:0 };
+    showScreen("screen-config");
+  });
+
+})();
+</script>
+</body>
+</html>
